@@ -97,6 +97,46 @@ namespace platf {
   }
 
   /**
+   * @brief Convert CRLF line endings, which the Windows clipboard uses, to LF.
+   *
+   * A lone CR is kept, so text that only uses CR is not changed.
+   *
+   * @param text Text with CRLF line endings.
+   * @return The same text with every CRLF replaced by LF.
+   */
+  inline std::string clipboard_crlf_to_lf(std::string_view text) {
+    std::string out;
+    out.reserve(text.size());
+    for (std::size_t i = 0; i < text.size(); ++i) {
+      if (text[i] == '\r' && i + 1 < text.size() && text[i + 1] == '\n') {
+        continue;
+      }
+      out.push_back(text[i]);
+    }
+    return out;
+  }
+
+  /**
+   * @brief Convert LF line endings to CRLF for the Windows clipboard.
+   *
+   * Existing CRLF pairs are kept as they are, so the result never holds CRCRLF.
+   *
+   * @param text Text with LF or CRLF line endings.
+   * @return The same text with every bare LF replaced by CRLF.
+   */
+  inline std::string clipboard_lf_to_crlf(std::string_view text) {
+    std::string out;
+    out.reserve(text.size() + text.size() / 16);
+    for (std::size_t i = 0; i < text.size(); ++i) {
+      if (text[i] == '\n' && (i == 0 || text[i - 1] != '\r')) {
+        out.push_back('\r');
+      }
+      out.push_back(text[i]);
+    }
+    return out;
+  }
+
+  /**
    * @brief Convert ISO-8859-1 text, which X11 uses for the STRING target, to UTF-8.
    *
    * @param latin1 Latin-1 bytes.

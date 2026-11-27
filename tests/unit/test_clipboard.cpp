@@ -474,3 +474,22 @@ TEST(ClipboardSelectionTest, SendsIncrSlicesThenAnEmptyTerminator) {
   EXPECT_EQ(sender.next(), (std::pair<std::size_t, std::size_t> {10, 0}));
   EXPECT_TRUE(sender.done());
 }
+
+TEST(ClipboardLineEndingTest, ConvertsWindowsLineEndingsToLf) {
+  EXPECT_EQ(platf::clipboard_crlf_to_lf("a\r\nb\r\n"), "a\nb\n");
+  EXPECT_EQ(platf::clipboard_crlf_to_lf("lone\rcr"), "lone\rcr");
+  EXPECT_EQ(platf::clipboard_crlf_to_lf("trailing\r"), "trailing\r");
+  EXPECT_EQ(platf::clipboard_crlf_to_lf(""), "");
+}
+
+TEST(ClipboardLineEndingTest, ConvertsLfToWindowsLineEndingsOnce) {
+  EXPECT_EQ(platf::clipboard_lf_to_crlf("a\nb\n"), "a\r\nb\r\n");
+  EXPECT_EQ(platf::clipboard_lf_to_crlf("\nstart"), "\r\nstart");
+  EXPECT_EQ(platf::clipboard_lf_to_crlf("already\r\nwindows"), "already\r\nwindows");
+  EXPECT_EQ(platf::clipboard_lf_to_crlf(""), "");
+}
+
+TEST(ClipboardLineEndingTest, RoundTripsThroughTheWindowsClipboard) {
+  const std::string text = "line one\nline two\n\nend";
+  EXPECT_EQ(platf::clipboard_crlf_to_lf(platf::clipboard_lf_to_crlf(text)), text);
+}
